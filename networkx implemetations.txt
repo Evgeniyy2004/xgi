@@ -1,5 +1,5 @@
-\xgi\algorithms\centrality.py
-- \xgi\convert\bipartite_graph.py
++ \xgi\algorithms\centrality.py
+... \xgi\convert\bipartite_graph.py
 \xgi\convert\encapsulation_dag.py
 + \xgi\convert\graph.py
 + \xgi\convert\line_graph.py
