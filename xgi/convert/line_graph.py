@@ -2,12 +2,11 @@
 
 from itertools import combinations
 
-import networkx as nx
+import igraph
 
 from ..exception import XGIError
 
 __all__ = ["to_line_graph"]
-
 
 def to_line_graph(H, s=1, weights=None):
     """The s-line graph of the hypergraph.
@@ -51,9 +50,9 @@ def to_line_graph(H, s=1, weights=None):
             f"{weights} not a valid weights option. Choices are "
             "None, 'absolute', and 'normalized'."
         )
-    LG = nx.Graph()
+    LG = igraph.Graph()
 
-    LG.add_nodes_from([(k, {"original_hyperedge": v}) for k, v in H._edge.items()])
+    LG.add_vertices([(k, {"original_hyperedge": v}) for k, v in H._edge.items()])
 
     for e1, e2 in combinations(H._edge, 2):
         # Check that the intersection size is larger than s
