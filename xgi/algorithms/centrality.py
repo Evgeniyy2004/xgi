@@ -8,6 +8,7 @@ from numpy.linalg import norm
 from scipy.sparse.linalg import eigsh
 
 from ..convert import to_line_graph
+from ..cpp_functions.algorithms.centrality import compute_centralities
 from ..exception import XGIError
 from ..linalg import clique_motif_matrix, incidence_matrix
 from ..utils import convert_labels_to_integers, pairwise_incidence, ttsv1, ttsv2
@@ -65,6 +66,35 @@ def clique_eigenvector_centrality(H, tol=1e-6):
     # multiply by the sign to try and enforce positivity
     v = np.sign(v[0]) * v / norm(v, 1)
     return {node_dict[n]: v[n].item() for n in node_dict}
+
+
+def improved_node_edge_centrality(
+        H,
+        f=lambda x: np.power(x, 2),
+        g=lambda x: np.power(x, 0.5),
+        phi=lambda x: np.power(x, 2),
+        psi=lambda x: np.power(x, 0.5),
+        max_iter=100,
+        tol=1e-6,
+):
+    # Проверка связности и пустоты
+    if H.num_nodes == 0 or H.num_edges == 0 or not is_connected(H):
+        return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
+
+    # Получаем матрицу инцидентности и маппинги
+    I, node_dict, edge_dict = incidence_matrix(H, index=True)
+    I_array = I.toarray() if hasattr(I, 'toarray') else np.array(I)
+
+    # Вычисляем центральности в C++
+    node_centralities, edge_centralities = compute_centralities(
+        I_array, f, g, phi, psi, max_iter, tol
+    )
+
+    # Создаем словари с результатами
+    node_result = {node_dict[n]: node_centralities[n] for n in node_dict}
+    edge_result = {edge_dict[e]: edge_centralities[e] for e in edge_dict}
+
+    return node_result, edge_result
 
 
 def node_edge_centrality(

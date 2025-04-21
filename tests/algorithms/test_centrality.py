@@ -304,3 +304,27 @@ def _ratio(r, m, kind="CEC"):
         return r ** (1.0 / m)
     elif kind == "ZEC":
         return r**0.5
+    
+
+def test_improved_node_edge_centrality():
+    # test empty hypergraph
+    H = xgi.Hypergraph()
+    assert xgi.algorithms.centrality.improved_node_edge_centrality(H) == (dict(), dict())
+
+    # Test no edges
+    H.add_nodes_from([0, 1, 2])
+    nc, ec = xgi.algorithms.centrality.improved_node_edge_centrality(H)
+    assert set(nc) == {0, 1, 2}
+    for i in nc:
+        assert np.isnan(nc[i])
+    assert ec == dict()
+
+    # test disconnected
+    H.add_edge([0, 1])
+    nc, ec = xgi.algorithms.centrality.improved_node_edge_centrality(H)
+    assert set(nc) == {0, 1, 2}
+    for i in nc:
+        assert np.isnan(nc[i])
+    assert set(ec) == {0}
+    for i in ec:
+        assert np.isnan(ec[i])

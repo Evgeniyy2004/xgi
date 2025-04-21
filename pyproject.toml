@@ -8,7 +8,8 @@ dynamic = ["version"]
 description = "XGI is a Python package for higher-order networks."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {file = "LICENSE.md"}
+#license = {file = "LICENSE.md"}
+license = "BSD-3-Clause"
 authors = [
     {name = "XGI Developers", email = "nicholas.landry@virginia.edu"}
 ]
@@ -27,7 +28,7 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
+#    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
