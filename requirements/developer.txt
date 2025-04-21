@@ -4,3 +4,4 @@ black[jupyter]>=24.3
 isort==5.10.1
 pylint>=3.0
 nbqa
+pybind11
