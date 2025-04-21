@@ -1,0 +1,30 @@
+D:\Projects\StudCamp v2\Repos\xgi\xgi\algorithms\centrality.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\convert\bipartite_graph.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\convert\encapsulation_dag.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\convert\graph.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\convert\line_graph.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\drawing\layout.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\generators\simplicial_complexes.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\utils\utilities.py
+
+D:\Projects\StudCamp v2\Repos\xgi\xgi\algorithms\connected.py
+D:\Projects\StudCamp v2\Repos\xgi\xgi\drawing\draw.py
+
+D:\Projects\StudCamp v2\Repos\xgi\examples\layouts\plot_triangular_lattice.py
+D:\Projects\StudCamp v2\Repos\xgi\tests\conftest.py
+D:\Projects\StudCamp v2\Repos\xgi\tests\algorithms\test_clustering.py
+D:\Projects\StudCamp v2\Repos\xgi\tests\convert\test_bipartite_graph.py
+D:\Projects\StudCamp v2\Repos\xgi\tests\convert\test_encapsulation_dag.py
+D:\Projects\StudCamp v2\Repos\xgi\tests\convert\test_line_graph.py
+D:\Projects\StudCamp v2\Repos\xgi\tests\generators\test_simplicial_complexes.py
+D:\Projects\StudCamp v2\Repos\xgi\tests\utils\test_utilities.py
+D:\Projects\StudCamp v2\Repos\xgi\tools\generate_requirements.py
+D:\Projects\StudCamp v2\Repos\xgi\tutorials\focus\Tutorial 4 - Generative_Models.ipynb
+D:\Projects\StudCamp v2\Repos\xgi\tutorials\focus\Tutorial 5 - Plotting.ipynb
+D:\Projects\StudCamp v2\Repos\xgi\tutorials\getting_started\quickstart.ipynb
+D:\Projects\StudCamp v2\Repos\xgi\tutorials\in_depth\In Depth 1 - Drawing nodes.ipynb
+D:\Projects\StudCamp v2\Repos\xgi\tutorials\in_depth\In Depth 2 - Drawing hyperedges.ipynb
+D:\Projects\StudCamp v2\Repos\xgi\tutorials\in_depth\In Depth 3 - Drawing DiHypergraphs.ipynb
+D:\Projects\StudCamp v2\Repos\xgi\tutorials\recipes\recipes.ipynb
+D:\Projects\StudCamp v2\Repos\xgi\pyproject.toml
+D:\Projects\StudCamp v2\Repos\xgi\requirements\default.txt
