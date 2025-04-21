@@ -1,5 +1,6 @@
 """Methods for converting to and from bipartite graphs."""
 
+import igraph as ig
 import networkx as nx
 
 from ..core import DiHypergraph, Hypergraph
@@ -9,51 +10,6 @@ __all__ = ["from_bipartite_graph", "to_bipartite_graph"]
 
 
 def from_bipartite_graph(G, dual=False):
-    """
-    Create a Hypergraph from a NetworkX bipartite graph.
-
-    Any hypergraph may be represented as a bipartite graph where
-    nodes in the first layer are nodes and nodes in the second layer
-    are hyperedges.
-
-    The default behavior is to create nodes in the hypergraph
-    from the nodes in the bipartite graph where the attribute
-    bipartite=0 and hyperedges in the hypergraph from the nodes
-    in the bipartite graph with attribute bipartite=1. Setting the
-    keyword `dual` reverses this behavior.
-
-
-    Parameters
-    ----------
-    G : nx.Graph
-        A networkx bipartite graph. Each node in the graph has a property
-        'bipartite' taking the value of 0 or 1 indicating the type of node.
-
-    dual : bool, default : False
-        If True, get edges from bipartite=0 and nodes from bipartite=1
-
-    Returns
-    -------
-    Hypergraph or DiHypergraph
-        The equivalent hypergraph or directed hypergraph
-
-    References
-    ----------
-    The Why, How, and When of Representations for Complex Systems,
-    Leo Torres, Ann S. Blevins, Danielle Bassett, and Tina Eliassi-Rad,
-    https://doi.org/10.1137/20M1355896
-
-    Examples
-    --------
-    >>> import networkx as nx
-    >>> import xgi
-    >>> G = nx.Graph()
-    >>> G.add_nodes_from([1, 2, 3, 4], bipartite=0)
-    >>> G.add_nodes_from(['a', 'b', 'c'], bipartite=1)
-    >>> G.add_edges_from([(1, 'a'), (1, 'b'), (2, 'b'), (2, 'c'), (3, 'c'), (4, 'a')])
-    >>> H = xgi.from_bipartite_graph(G)
-
-    """
     if isinstance(G, nx.DiGraph):
         directed = True
     else:
@@ -155,12 +111,12 @@ def to_bipartite_graph(H, index=False):
     edge_dict = dict(zip(H.edges, range(n, n + m)))
 
     if directed:
-        G = nx.DiGraph()
+        G = ig.Graph.Bipartite(directed=True)
     else:
-        G = nx.Graph()
+        G = ig.Graph.Bipartite()
 
-    G.add_nodes_from(node_dict.values(), bipartite=0)
-    G.add_nodes_from(edge_dict.values(), bipartite=1)
+    G.add_vertices(node_dict.values(), {"type": 0})
+    G.add_vertices(edge_dict.values(), {"type": 1})
 
     if directed:
         for e in H.edges:
