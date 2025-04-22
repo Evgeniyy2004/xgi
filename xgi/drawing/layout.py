@@ -24,7 +24,15 @@ __all__ = [
     "edge_positions_from_barycenters",
 ]
 
-
+def vertexes_to_graph(H):
+    empty_graph = ig.Graph()
+    phantom_node_id=0
+    for n in H.nodes:
+        empty_graph.add_vertex(n) 
+        for k,v in H.nodes[n].items():
+            empty_graph.vs[phantom_node_id][k]=v
+        phantom_node_id+=1
+    return empty_graph    
 def random_layout(H, center=None, seed=None):
     """Position nodes uniformly at random in the unit square.
 
@@ -78,11 +86,7 @@ def random_layout(H, center=None, seed=None):
         np.random.seed(seed)
 
     if not isinstance(H, ig.Graph):
-          node_names = list(H.nodes)
-          empty_graph = ig.Graph()
-          empty_graph.add_vertices([tuple([n, H.nodes.attrs(n)]) for n in H.nodes])
-          H = empty_graph
-          H.vs["name"] = node_names
+          H = vertexes_to_graph(H)
 
 
     if center is None:
@@ -94,9 +98,9 @@ def random_layout(H, center=None, seed=None):
         msg = "length of center coordinates must match dimension of layout"
         raise ValueError(msg)
     
-    pos = np.random.rand(len(H.nodes), 2) + center
+    pos = np.random.rand(len(H.vs), 2) + center
     pos = pos.astype(np.float32)
-    pos = dict(zip(H.nodes.ids, pos))
+    pos = dict(zip(H.vs.indices, pos))
     return pos
 
 
@@ -154,7 +158,7 @@ def pairwise_spring_layout(H, seed=None, k=None, **kwargs):
     if isinstance(H, SimplicialComplex):
         H = convert.from_max_simplices(H)
     G = convert.to_ig_graph(H)
-    pos = G.layout_fruchterman_reingold(dim=2, k=k,weights="weight", seed=seed)
+    pos = G.layout_fruchterman_reingold(dim=2, seed=seed)
     return pos
 
 
@@ -185,15 +189,10 @@ def _augmented_projection(H, weighted=False):
     for n in H.nodes:
         G.add_vertex(n) 
         G.vs[phantom_node_id]["type"]=False
-        G.vs[phantom_node_id]["name"]=n
+        for k,v in H.nodes[n].items():
+            G.vs[phantom_node_id][k]=v
         phantom_node_id+=1
-    try:
-        phantom_node_id = max([n for n in H.nodes if isinstance(n, int)]) + 1
-    except ValueError:
-        # The list of node-labels has no integers, so I start from 0
-        phantom_node_id = 0
-
-    
+   
     edges = H.edges.filterby("order", 1, "geq")
     
     # Looping over the hyperedges of different order
@@ -201,16 +200,15 @@ def _augmented_projection(H, weighted=False):
         d = len(members) - 1
         # Adding one phantom node for each hyperedge
         
-        G.add_vertex(phantom_node_id, attributes={"type":True})
-        print(G.vs.find(lambda name: len(str(name))>0))
+        G.add_vertex(phantom_node_id)
+        G.vs[phantom_node_id]["type"]=True
         # and linking it to the nodes of the hyperedge
         for n in members:
-            print(G.vs["name"])
-            print(G.vs[n])
+    
             if weighted:
-                G.add_edge(phantom_node_id, G.vs.find(name=n).index, weight=d)
+                G.add_edge(G.vs.find(name=phantom_node_id).index, G.vs.find(name=n).index, weight=d)
             else:
-                 G.add_edge(phantom_node_id, G.vs.find(name=n).index)
+                 G.add_edge(G.vs.find(name=phantom_node_id).index, G.vs.find(name=n).index)
         phantom_node_id += 1
     
     return G
@@ -379,7 +377,7 @@ def barycenter_spring_layout(
 
     # Creating a dictionary for the position of the nodes with the standard spring
     # layout
-    pos_with_phantom_nodes = G.layout_fruchterman_reingold(seed=seed,weights="weight")
+    pos_with_phantom_nodes = G.layout_fruchterman_reingold(seed=seed)
 
     # Retaining only the positions of the real nodes
     pos = {k: pos_with_phantom_nodes[k] for k in list(H.nodes)}
@@ -453,7 +451,7 @@ def weighted_barycenter_spring_layout(
     G = _augmented_projection(H, weighted=True)
 
     # Creating a dictionary for node position with the standard spring layout
-    pos_with_phantom_nodes = G.layout_fruchterman_reingold(seed=seed, k=k,weights="weight")
+    pos_with_phantom_nodes = G.layout_fruchterman_reingold(seed=seed)
 
     # Retaining only the positions of the real nodes
     pos = {k: pos_with_phantom_nodes[k] for k in list(H.nodes)}
