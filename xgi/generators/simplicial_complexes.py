@@ -8,7 +8,7 @@ import random
 from collections import defaultdict
 from itertools import combinations
 
-import networkx as nx
+import igraph as ig
 import numpy as np
 from scipy.special import comb
 
@@ -89,7 +89,7 @@ def random_simplicial_complex(N, ps, seed=None):
     return S
 
 
-def flag_complex(G, max_order=2, ps=None, seed=None):
+def flag_complex(G: ig.Graph, max_order=2, ps=None, seed=None):
     """Generate a flag (or clique) complex from a
     NetworkX graph by filling all cliques up to dimension max_order.
 
@@ -128,15 +128,15 @@ def flag_complex(G, max_order=2, ps=None, seed=None):
     if seed is not None:
         random.seed(seed)
 
-    nodes = G.nodes()
+    nodes = G.vs
     N = len(nodes)
-    edges = G.edges()
+    edges = G.es
 
     cliques_to_add = _cliques_to_fill(G, max_order)
 
     S = SimplicialComplex()
-    S.add_nodes_from(nodes)
-    S.add_simplices_from(edges)
+    S.add_nodes_from([(n.index, n.attributes()) for n in nodes])
+    S.add_simplices_from(([edge.source, edge.target], edge.attributes()) for edge in edges)
     if not ps:  # promote all cliques
         S.add_simplices_from(cliques_to_add, max_order=max_order)
         return S
@@ -188,12 +188,12 @@ def flag_complex_d2(G, p2=None, seed=None):
     if seed is not None:
         random.seed(seed)
 
-    nodes = G.nodes()
-    edges = G.edges()
+    nodes = G.vs
+    edges = G.es
 
     S = SimplicialComplex()
-    S.add_nodes_from(nodes)
-    S.add_simplices_from(edges)
+    S.add_nodes_from([(n.index, n.attributes()) for n in nodes])
+    S.add_simplices_from(([edge.source, edge.target], edge.attributes()) for edge in edges)
 
     triangles_empty = find_triangles(G)
 
@@ -238,7 +238,7 @@ def random_flag_complex_d2(N, p, seed=None):
     if (p < 0) or (p > 1):
         raise ValueError("p must be between 0 and 1 included.")
 
-    G = nx.fast_gnp_random_graph(N, p, seed=seed)
+    G = ig.Graph.Gnp(N, p, seed=seed, directed=True)
 
     return flag_complex_d2(G)
 
@@ -273,20 +273,19 @@ def random_flag_complex(N, p, max_order=2, seed=None):
     if (p < 0) or (p > 1):
         raise ValueError("p must be between 0 and 1 included.")
 
-    G = nx.fast_gnp_random_graph(N, p, seed=seed)
-
-    nodes = G.nodes()
+    G = ig.Graph.Gnp(N, p, seed=seed, directed=True)
+    nodes = G.vs
 
     cliques = _cliques_to_fill(G, max_order)
 
     S = SimplicialComplex()
-    S.add_nodes_from(nodes)
+    S.add_nodes_from([(n.index, n.attributes()) for n in nodes])
     S.add_simplices_from(cliques, max_order=max_order)
 
     return S
 
 
-def _cliques_to_fill(G, max_order):
+def _cliques_to_fill(G: ig.Graph, max_order):
     """Return cliques to fill for flag complexes,
     to be passed to `add_simplices_from`.
 
@@ -308,15 +307,13 @@ def _cliques_to_fill(G, max_order):
 
     """
     if max_order is None:
-        cliques = list(nx.find_cliques(G))  # max cliques
+        cliques = list(G.maximal_cliques())  # max cliques
     else:  # avoid adding many unnecessary redundant cliques
         cliques = []
-        for clique in nx.enumerate_all_cliques(G):  # sorted by size
+        for clique in G.cliques(max=max_order + 1):  # sorted by size
             if len(clique) == 1:
                 continue  # don't add singletons
-            if len(clique) <= max_order + 1:
-                cliques.append(clique)
             else:
-                break  # dont go over whole list if not necessary
+                cliques.append(clique)
 
     return cliques
