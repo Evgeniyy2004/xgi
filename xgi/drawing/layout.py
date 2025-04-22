@@ -77,10 +77,12 @@ def random_layout(H, center=None, seed=None):
     if seed is not None:
         np.random.seed(seed)
 
-    # if not isinstance(H, ig.Graph):
-    #     empty_graph = ig.Graph()
-    #     empty_graph.add_vertices([tuple([n, H.nodes.attrs(n)]) for n in H.nodes])
-    #     H = empty_graph
+    if not isinstance(H, ig.Graph):
+          node_names = list(H.nodes)
+          empty_graph = ig.Graph()
+          empty_graph.add_vertices([tuple([n, H.nodes.attrs(n)]) for n in H.nodes])
+          H = empty_graph
+          H.vs["name"] = node_names
 
 
     if center is None:
@@ -152,8 +154,7 @@ def pairwise_spring_layout(H, seed=None, k=None, **kwargs):
     if isinstance(H, SimplicialComplex):
         H = convert.from_max_simplices(H)
     G = convert.to_ig_graph(H)
-    pos = G.layout_fruchterman_reingold(G, dim=dim, weights="weight", seed=seed)
-    nx.spring_layout(G, seed=seed, k=k, **kwargs)
+    pos = G.layout_fruchterman_reingold(dim=2, k=k,weights="weight", seed=seed)
     return pos
 
 
@@ -176,33 +177,42 @@ def _augmented_projection(H, weighted=False):
     G : networkx.Graph
         The augmented version of the graph projection
     """
-    # Creating the projected networkx Graph, I will fill it manually
-    G = nx.Graph()
 
-    # Adding real nodes
-    G.add_nodes_from(list(H.nodes), bipartite="node")
 
-    # Adding phantom nodes and connections therein
-    # I will start from the first int node-label available
+    # Создание пустого графа igraph
+    G = ig.Graph()
+    phantom_node_id=0
+    for n in H.nodes:
+        G.add_vertex(n) 
+        G.vs[phantom_node_id]["type"]=False
+        G.vs[phantom_node_id]["name"]=n
+        phantom_node_id+=1
     try:
         phantom_node_id = max([n for n in H.nodes if isinstance(n, int)]) + 1
     except ValueError:
         # The list of node-labels has no integers, so I start from 0
         phantom_node_id = 0
 
+    
     edges = H.edges.filterby("order", 1, "geq")
+    
     # Looping over the hyperedges of different order
     for he_id, members in edges.members(dtype=dict).items():
         d = len(members) - 1
         # Adding one phantom node for each hyperedge
-        G.add_node(phantom_node_id, bipartite="hyperedge")
+        
+        G.add_vertex(phantom_node_id, attributes={"type":True})
+        print(G.vs.find(lambda name: len(str(name))>0))
         # and linking it to the nodes of the hyperedge
         for n in members:
+            print(G.vs["name"])
+            print(G.vs[n])
             if weighted:
-                G.add_edge(phantom_node_id, n, weight=d)
+                G.add_edge(phantom_node_id, G.vs.find(name=n).index, weight=d)
             else:
-                G.add_edge(phantom_node_id, n)
+                 G.add_edge(phantom_node_id, G.vs.find(name=n).index)
         phantom_node_id += 1
+    
     return G
 
 
@@ -257,7 +267,7 @@ def bipartite_spring_layout(H, seed=None, k=None, **kwargs):
 
     # Creating a dictionary for the position of the nodes with the standard spring
     # layout
-    pos = nx.spring_layout(G, seed=seed, k=k, **kwargs)
+    pos = G.layout_fruchterman_reingold(seed=seed, k=k,weights="weight")
 
     node_pos = {nodedict[i]: pos[i] for i in nodedict}
     edge_pos = {edgedict[i]: pos[i] for i in edgedict}
@@ -369,7 +379,7 @@ def barycenter_spring_layout(
 
     # Creating a dictionary for the position of the nodes with the standard spring
     # layout
-    pos_with_phantom_nodes = nx.spring_layout(G, seed=seed, k=k, **kwargs)
+    pos_with_phantom_nodes = G.layout_fruchterman_reingold(seed=seed,weights="weight")
 
     # Retaining only the positions of the real nodes
     pos = {k: pos_with_phantom_nodes[k] for k in list(H.nodes)}
@@ -443,9 +453,7 @@ def weighted_barycenter_spring_layout(
     G = _augmented_projection(H, weighted=True)
 
     # Creating a dictionary for node position with the standard spring layout
-    pos_with_phantom_nodes = nx.spring_layout(
-        G, weight="weight", seed=seed, k=k, **kwargs
-    )
+    pos_with_phantom_nodes = G.layout_fruchterman_reingold(seed=seed, k=k,weights="weight")
 
     # Retaining only the positions of the real nodes
     pos = {k: pos_with_phantom_nodes[k] for k in list(H.nodes)}
@@ -622,7 +630,8 @@ def barycenter_kamada_kawai_layout(H, return_phantom_graph=False, **kwargs):
     G = _augmented_projection(H)
 
     # Creating a dictionary for the position of the nodes with the standard spring layout
-    pos_with_phantom_nodes = nx.kamada_kawai_layout(G, **kwargs)
+    pos_with_phantom_nodes = G.layout_kamada_kawai(**kwargs)
+
 
     # Retaining only the positions of the real nodes
     pos = {k: pos_with_phantom_nodes[k] for k in list(H.nodes)}
