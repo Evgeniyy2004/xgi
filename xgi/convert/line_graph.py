@@ -125,7 +125,7 @@ def to_ig_line_graph(H, s=1, weights=None):
     total = comb(len(hyperedges), 2)
 
 
-    for (e1_idx, e1), (e2_idx, e2) in tqdm(combinations(enumerate(hyperedges), 2), total=total):
+    for (e1_idx, e1), (e2_idx, e2) in tqdm(combinations(enumerate(hyperedges), 2), total=total, miniters=10000000):
         e1_set, e2_set = e1[1], e2[1]
         intersection_size = len(e1_set.intersection(e2_set))
 

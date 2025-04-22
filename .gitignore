@@ -5,6 +5,8 @@ docs/source/auto_examples
 __pycache__/
 *.py[cod]
 *$py.class
+
+*.pkl
 *.pickle
 *.csv
 

@@ -181,9 +181,9 @@ def fast_line_vector_centrality(H):
     if H.num_nodes == 0:
         return dict()
 
-    print("Checking connections...")
-    if not is_connected(H):
-        raise XGIError("This method is not defined for disconnected hypergraphs.")
+    # print("Checking connections...")
+    # if not is_connected(H):
+    #     raise XGIError("This method is not defined for disconnected hypergraphs.")
 
     print("Parsing to line_graph...")
     LG = to_ig_line_graph(H)
