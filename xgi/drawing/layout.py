@@ -3,6 +3,7 @@
 import random
 
 import networkx as nx
+import igraph as ig
 import numpy as np
 from numpy.linalg import inv, svd
 
@@ -76,11 +77,24 @@ def random_layout(H, center=None, seed=None):
     if seed is not None:
         np.random.seed(seed)
 
-    H, center = nx.drawing.layout._process_params(H, center, 2)
-    pos = np.random.rand(len(H), 2) + center
-    pos = pos.astype(np.float32)
-    pos = dict(zip(H, pos))
+    # if not isinstance(H, ig.Graph):
+    #     empty_graph = ig.Graph()
+    #     empty_graph.add_vertices([tuple([n, H.nodes.attrs(n)]) for n in H.nodes])
+    #     H = empty_graph
 
+
+    if center is None:
+        center = np.zeros(2)
+    else:
+        center = np.asarray(center)
+
+    if len(center) != 2:
+        msg = "length of center coordinates must match dimension of layout"
+        raise ValueError(msg)
+    
+    pos = np.random.rand(len(H.nodes), 2) + center
+    pos = pos.astype(np.float32)
+    pos = dict(zip(H.nodes.ids, pos))
     return pos
 
 
@@ -137,8 +151,9 @@ def pairwise_spring_layout(H, seed=None, k=None, **kwargs):
 
     if isinstance(H, SimplicialComplex):
         H = convert.from_max_simplices(H)
-    G = convert.to_graph(H)
-    pos = nx.spring_layout(G, seed=seed, k=k, **kwargs)
+    G = convert.to_ig_graph(H)
+    pos = G.layout_fruchterman_reingold(G, dim=dim, weights="weight", seed=seed)
+    nx.spring_layout(G, seed=seed, k=k, **kwargs)
     return pos
 
 
