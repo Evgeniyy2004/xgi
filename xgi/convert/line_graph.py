@@ -9,7 +9,6 @@ from ..exception import XGIError
 
 __all__ = ["to_line_graph"]
 
-from itertools import combinations
 from igraph import Graph
 
 __all__ = ["to_line_graph", "to_ig_line_graph"]
@@ -120,7 +119,13 @@ def to_ig_line_graph(H, s=1, weights=None):
     LG.vs["name"] = [k for k, _ in hyperedges]
     LG.vs["original_hyperedge"] = [v for _, v in hyperedges]
 
-    for (e1_idx, e1), (e2_idx, e2) in combinations(enumerate(hyperedges), 2):
+    from tqdm import tqdm
+    from math import comb
+
+    total = comb(len(hyperedges), 2)
+
+
+    for (e1_idx, e1), (e2_idx, e2) in tqdm(combinations(enumerate(hyperedges), 2), total=total):
         e1_set, e2_set = e1[1], e2[1]
         intersection_size = len(e1_set.intersection(e2_set))
 

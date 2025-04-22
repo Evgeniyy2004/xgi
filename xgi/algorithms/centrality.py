@@ -181,10 +181,13 @@ def fast_line_vector_centrality(H):
     if H.num_nodes == 0:
         return dict()
 
+    print("Checking connections...")
     if not is_connected(H):
         raise XGIError("This method is not defined for disconnected hypergraphs.")
 
+    print("Parsing to line_graph...")
     LG = to_ig_line_graph(H)
+    print("Counting eigenvector_centrality...")
     LGcent = LG.eigenvector_centrality(scale = False)
 
     vc = {node: [] for node in H.nodes}
@@ -194,8 +197,9 @@ def fast_line_vector_centrality(H):
     hyperedge_dims = {tuple(edge): len(edge) for edge in H.edges.members()}
 
     D = H.edges.size.max()
-
-    for k in range(2, D + 1):
+    print("Putting together...")
+    from tqdm import tqdm
+    for k in tqdm(range(2, D + 1)):
         c_i = np.zeros(len(H.nodes))
 
         for edge, _ in list(filter(lambda x: x[1] == k, hyperedge_dims.items())):
