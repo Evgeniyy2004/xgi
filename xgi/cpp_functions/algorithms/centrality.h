@@ -7,16 +7,10 @@
 
 namespace py = pybind11;
 
-std::pair<std::vector<double>, std::vector<double>> 
+std::tuple<std::vector<double>, std::vector<double>, std::vector<int>, std::vector<int>> 
 compute_centralities(
-    py::array_t<double> I_array,
-//    const std::function<double(double)>& f,
-//    const std::function<double(double)>& g,
-//    const std::function<double(double)>& phi,
-//    const std::function<double(double)>& psi,
-		const py::dict& dict_nodes,
-		const py::dict& dict_edges,
+    const std::unordered_map<int, std::unordered_set<int>>& nodes,
+    const std::unordered_map<int, std::unordered_set<int>>& edges,
     int max_iter,
     double tol
-
 );

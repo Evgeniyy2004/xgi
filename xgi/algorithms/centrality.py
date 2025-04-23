@@ -69,28 +69,33 @@ def clique_eigenvector_centrality(H, tol=1e-6):
 
 
 def improved_node_edge_centrality(
-        H,
-        max_iter=100,
-        tol=1e-6,
+    H,
+    max_iter=100,
+    tol=1e-6,
 ):
-    # Проверка связности и пустоты
+    """Оптимизированная версия node-edge centrality с C++ вычислением матрицы инцидентности"""
     if H.num_nodes == 0 or H.num_edges == 0 or not is_connected(H):
         return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
 
-    # Получаем матрицу инцидентности и маппинги
-    I, node_dict, edge_dict = incidence_matrix(H, index=True)
-    I_array = I.toarray() if hasattr(I, 'toarray') else np.array(I)
+    # Получаем данные о гиперграфе
+    nodes_data = {n: set(H._node[n]) for n in H.nodes}
+    edges_data = {e: set(H._edge[e]) for e in H.edges}
 
-    # Вычисляем центральности в C++
-    node_centralities, edge_centralities = compute_centralities(
-        I,
-        H._node, H._edge,
-        max_iter=max_iter, tol=tol
-    )
+    # Вызываем C++ функцию
+    try:
+        node_centralities, edge_centralities, node_ids, edge_ids = compute_centralities(
+            nodes_data,
+            edges_data,
+            max_iter,
+            tol
+        )
+    except Exception as e:
+        warn(f"Error in C++ computation: {str(e)}")
+        return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
 
-    # Создаем словари с результатами
-    node_result = {node_dict[n]: node_centralities[n] for n in node_dict}
-    edge_result = {edge_dict[e]: edge_centralities[e] for e in edge_dict}
+    # Создаем маппинги и результаты
+    node_result = {node_id: node_centralities[idx] for idx, node_id in enumerate(node_ids)}
+    edge_result = {edge_id: edge_centralities[idx] for idx, edge_id in enumerate(edge_ids)}
 
     return node_result, edge_result
 
