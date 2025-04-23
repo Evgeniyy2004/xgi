@@ -70,10 +70,6 @@ def clique_eigenvector_centrality(H, tol=1e-6):
 
 def improved_node_edge_centrality(
         H,
-        f=lambda x: np.power(x, 2),
-        g=lambda x: np.power(x, 0.5),
-        phi=lambda x: np.power(x, 2),
-        psi=lambda x: np.power(x, 0.5),
         max_iter=100,
         tol=1e-6,
 ):
@@ -87,7 +83,9 @@ def improved_node_edge_centrality(
 
     # Вычисляем центральности в C++
     node_centralities, edge_centralities = compute_centralities(
-        I_array, f, g, phi, psi, max_iter, tol
+        I,
+        H._node, H._edge,
+        max_iter=max_iter, tol=tol
     )
 
     # Создаем словари с результатами
