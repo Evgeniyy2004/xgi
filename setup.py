@@ -7,12 +7,14 @@ ext_modules = [
         sources=[
             "xgi/cpp_functions/main.cpp",
             "xgi/cpp_functions/algorithms/centrality.cpp",
-            "xgi/cpp_functions/algorithms/connected.cpp"
+            "xgi/cpp_functions/algorithms/connected.cpp",
+            "xgi/cpp_functions/convert/line_graph.cpp"
         ],
         include_dirs=["extern/pybind11/include"],
-        extra_compile_args=["-O3", "-Wall"],
+        extra_compile_args=["-O3", "-Wall", "-fopenmp"],
         define_macros=[("PYBIND11", None)],
-        cxx_std=11,
+        extra_link_args=["-fopenmp"],
+        cxx_std=17,
     )
 ]
 
