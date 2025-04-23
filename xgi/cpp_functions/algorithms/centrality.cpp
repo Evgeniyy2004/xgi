@@ -1,3 +1,4 @@
+#include "connected.h"
 #include <vector>
 #include <cmath>
 #include <unordered_map>
@@ -19,7 +20,7 @@ void normalize(std::vector<double>& vec) {
     }
 }
 
-std::tuple<std::vector<double>, std::vector<double>, std::vector<int>, std::vector<int>> 
+std::pair<std::unordered_map<int, double>, std::unordered_map<int, double>>
 compute_centralities(
     const std::unordered_map<int, std::unordered_set<int>>& nodes,
     const std::unordered_map<int, std::unordered_set<int>>& edges,
@@ -104,12 +105,21 @@ compute_centralities(
         }
 
         if (diff < tol) {
-            return std::make_tuple(new_x, new_y, node_ids, edge_ids);
+				x = new_x;
+		        y = new_y;
+				break;
         }
 
         x = new_x;
         y = new_y;
     }
-
-    return std::make_tuple(x, y, node_ids, edge_ids);
+		std::unordered_map<int, double> node_result;
+		std::unordered_map<int, double> edges_result;
+		for (size_t i = 0; i < num_nodes; i++) 
+			node_result[node_ids[i]] = x[i];
+		
+		for (size_t i = 0; i < num_edges; i++) 
+			edges_result[edge_ids[i]] = y[i];
+		
+		return std::make_pair(node_result, edges_result);
 }

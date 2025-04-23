@@ -7,10 +7,10 @@
 
 namespace py = pybind11;
 
-std::tuple<std::vector<double>, std::vector<double>, std::vector<int>, std::vector<int>> 
+std::pair<std::unordered_map<int, double>, std::unordered_map<int, double>> 
 compute_centralities(
-    const std::unordered_map<int, std::unordered_set<int>>& nodes,
-    const std::unordered_map<int, std::unordered_set<int>>& edges,
+    const std::unordered_map<int, std::unordered_set<int>>& node_dict,
+    const std::unordered_map<int, std::unordered_set<int>>& edge_dict,
     int max_iter,
     double tol
 );
