@@ -9,6 +9,7 @@ from scipy.sparse.linalg import eigsh
 
 from ..convert import to_line_graph
 from ..cpp_functions.algorithms.centrality import compute_centralities
+from ..convert import to_ig_line_graph
 from ..exception import XGIError
 from ..linalg import clique_motif_matrix, incidence_matrix
 from ..utils import convert_labels_to_integers, pairwise_incidence, ttsv1, ttsv2
@@ -20,6 +21,7 @@ __all__ = [
     "h_eigenvector_centrality",
     "z_eigenvector_centrality",
     "node_edge_centrality",
+    "fast_line_vector_centrality",
     "line_vector_centrality",
     "katz_centrality",
     "uniform_h_eigenvector_centrality",
@@ -178,6 +180,64 @@ def node_edge_centrality(
         edge_dict[e]: new_y[e] for e in edge_dict
     }
 
+
+def fast_line_vector_centrality(H):
+    """The vector centrality of nodes in the line graph of the hypergraph.
+
+    Parameters
+    ----------
+    H : Hypergraph
+        The hypergraph of interest
+
+    Returns
+    -------
+    dict
+        Centrality, where keys are node IDs and values are lists of centralities.
+
+    References
+    ----------
+    "Vector centrality in hypergraphs", K. Kovalenko, M. Romance, E. Vasilyeva,
+    D. Aleja, R. Criado, D. Musatov, A.M. Raigorodskii, J. Flores, I. Samoylenko,
+    K. Alfaro-Bittner, M. Perc, S. Boccaletti,
+    https://doi.org/10.1016/j.chaos.2022.112397
+
+    """
+    # If the hypergraph is empty, then return an empty dictionary
+    if H.num_nodes == 0:
+        return dict()
+
+    if not is_connected(H):
+        raise XGIError("This method is not defined for disconnected hypergraphs.")
+
+    LG = to_ig_line_graph(H)
+    LGcent = LG.eigenvector_centrality(scale = False)
+
+    vc = {node: [] for node in H.nodes}
+
+    edge_label_dict = {tuple(edge): index for index, edge in H._edge.items()}
+
+    hyperedge_dims = {tuple(edge): len(edge) for edge in H.edges.members()}
+
+    D = H.edges.size.max()
+
+    for k in range(2, D + 1):
+        c_i = np.zeros(len(H.nodes))
+
+        for edge, _ in list(filter(lambda x: x[1] == k, hyperedge_dims.items())):
+            for node in edge:
+                try:
+                    c_i[node] += LGcent[edge_label_dict[edge]]
+                except IndexError:
+                    raise Exception(
+                        "Nodes must be written with the Pythonic indexing (0,1,2...)"
+                    )
+
+        c_i *= 1 / k
+
+        for node in H.nodes:
+            vc[node].append(c_i[node])
+
+    return vc
 
 def line_vector_centrality(H):
     """The vector centrality of nodes in the line graph of the hypergraph.

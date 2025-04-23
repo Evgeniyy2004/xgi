@@ -1,5 +1,5 @@
 """Methods for converting to and from bipartite graphs."""
-
+import igraph as ig
 import networkx as nx
 
 from ..core import DiHypergraph, Hypergraph
@@ -8,7 +8,7 @@ from ..exception import XGIError
 __all__ = ["from_bipartite_graph", "to_bipartite_graph"]
 
 
-def from_bipartite_graph(G, dual=False):
+def from_bipartite_graph(G: ig.Graph, dual=False):
     """
     Create a Hypergraph from a NetworkX bipartite graph.
 
@@ -42,19 +42,8 @@ def from_bipartite_graph(G, dual=False):
     The Why, How, and When of Representations for Complex Systems,
     Leo Torres, Ann S. Blevins, Danielle Bassett, and Tina Eliassi-Rad,
     https://doi.org/10.1137/20M1355896
-
-    Examples
-    --------
-    >>> import networkx as nx
-    >>> import xgi
-    >>> G = nx.Graph()
-    >>> G.add_nodes_from([1, 2, 3, 4], bipartite=0)
-    >>> G.add_nodes_from(['a', 'b', 'c'], bipartite=1)
-    >>> G.add_edges_from([(1, 'a'), (1, 'b'), (2, 'b'), (2, 'c'), (3, 'c'), (4, 'a')])
-    >>> H = xgi.from_bipartite_graph(G)
-
     """
-    if isinstance(G, nx.DiGraph):
+    if G.is_directed():
         directed = True
     else:
         directed = False
@@ -62,20 +51,21 @@ def from_bipartite_graph(G, dual=False):
     edges = []
     nodes = []
 
-    for n, d in G.nodes(data=True):
+    for n in G.vs:
         try:
-            node_type = d["bipartite"]
+            node_type = n['type']
         except KeyError as e:
             raise XGIError("bipartite property not set") from e
+        if (type(node_type) is bool):
+            if node_type:
+                edges.append(n.index)
+            elif not node_type:
+                nodes.append(tuple([n.index, n.attributes()]))
 
-        if node_type == 0:
-            nodes.append(n)
-        elif node_type == 1:
-            edges.append(n)
         else:
             raise XGIError("Invalid type specifier")
 
-    if not _is_bipartite(G, nodes, edges):
+    if not G.is_bipartite():
         raise XGIError("The network is not bipartite")
 
     if directed:
@@ -85,7 +75,9 @@ def from_bipartite_graph(G, dual=False):
 
     H.add_nodes_from(nodes)
 
-    for u, v in G.edges:
+    for e in G.es:
+        v = e.target
+        u = e.source
         if directed:
             if v in edges:
                 H.add_node_to_edge(v, u, direction="in")
@@ -108,41 +100,6 @@ def _is_bipartite(G, nodes1, nodes2):
 
 
 def to_bipartite_graph(H, index=False):
-    """Create a NetworkX bipartite network from a hypergraph.
-
-    Parameters
-    ----------
-    H: xgi.Hypergraph or xgi.DiHypergraph
-        The XGI hypergraph object of interest
-    index: bool (default False)
-        If False (default), return only the graph.  If True, additionally return the
-        index-to-node and index-to-edge mappings.
-
-    Returns
-    -------
-    if xgi.Hypergraph
-        nx.Graph[, dict, dict]
-            The resulting equivalent bipartite graph, and optionally the index-to-unit
-            mappings.
-    if xgi.Hypergraph
-        nx.DiGraph[, dict, dict]
-            The resulting equivalent directed bipartite graph, and optionally the index-to-unit
-            mappings.
-    References
-    ----------
-    The Why, How, and When of Representations for Complex Systems,
-    Leo Torres, Ann S. Blevins, Danielle Bassett, and Tina Eliassi-Rad,
-    https://doi.org/10.1137/20M1355896
-
-    Examples
-    --------
-    >>> import xgi
-    >>> hyperedge_list = [[1, 2], [2, 3, 4]]
-    >>> H = xgi.Hypergraph(hyperedge_list)
-    >>> G = xgi.to_bipartite_graph(H)
-    >>> G, itn, ite = xgi.to_bipartite_graph(H, index=True)
-
-    """
     if isinstance(H, DiHypergraph):
         directed = True
     else:
@@ -154,24 +111,24 @@ def to_bipartite_graph(H, index=False):
     node_dict = dict(zip(H.nodes, range(n)))
     edge_dict = dict(zip(H.edges, range(n, n + m)))
 
-    if directed:
-        G = nx.DiGraph()
-    else:
-        G = nx.Graph()
+    futurevertexes = [0] * n + [1] * m
 
-    G.add_nodes_from(node_dict.values(), bipartite=0)
-    G.add_nodes_from(edge_dict.values(), bipartite=1)
-
+    futureedges = set()
     if directed:
         for e in H.edges:
             for v in H.edges.tail(e):
-                G.add_edge(node_dict[v], edge_dict[e])
+                futureedges.add((node_dict[v], edge_dict[e]))
             for v in H.edges.head(e):
-                G.add_edge(edge_dict[e], node_dict[v])
+                futureedges.add((edge_dict[e], node_dict[v]))
     else:
         for e in H.edges:
             for v in H.edges.members(e):
-                G.add_edge(node_dict[v], edge_dict[e])
+                futureedges.add((node_dict[v], edge_dict[e]))
+
+    if directed:
+        G = ig.Graph.Bipartite(futurevertexes, list(futureedges), directed=True)
+    else:
+        G = ig.Graph.Bipartite(futurevertexes, list(futureedges), directed=False)
 
     if index:
         return (
