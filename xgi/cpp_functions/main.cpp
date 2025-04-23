@@ -9,8 +9,8 @@ PYBIND11_MODULE(cpp_functions, m) {
 		py::module_ m_algorithms = m.def_submodule("algorithms");
 		py::module_ m_cetrality = m_algorithms.def_submodule("centrality");
     m_cetrality.def("compute_centralities", &compute_centralities,
-					py::arg("nodes"),
-					py::arg("edges"),
+					py::arg("node_dict"),
+					py::arg("edge_dict"),
           py::arg("max_iter") = 100,
           py::arg("tol") = 1e-6,
           "Computes node and edge centralities from incidence matrix");

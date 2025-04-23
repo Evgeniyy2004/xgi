@@ -73,19 +73,15 @@ def improved_node_edge_centrality(
     max_iter=100,
     tol=1e-6,
 ):
-    """Оптимизированная версия node-edge centrality с C++ вычислением матрицы инцидентности"""
+    """Optimized version node-edge centrality on C++"""
     if H.num_nodes == 0 or H.num_edges == 0 or not is_connected(H):
         return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
-
-    # Получаем данные о гиперграфе
-    nodes_data = {n: set(H._node[n]) for n in H.nodes}
-    edges_data = {e: set(H._edge[e]) for e in H.edges}
 
     # Вызываем C++ функцию
     try:
         node_result, edge_result = compute_centralities(
-            nodes_data,
-            edges_data,
+            H._node,
+            H._edge,
             max_iter,
             tol
         )

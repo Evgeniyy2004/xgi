@@ -19,7 +19,6 @@ void normalize(std::vector<double>& vec) {
     }
 }
 
-// std::tuple<std::vector<double>, std::vector<double>, std::vector<int>, std::vector<int>> 
 std::pair<std::unordered_map<int, double>, std::unordered_map<int, double>>
 compute_centralities(
     const std::unordered_map<int, std::unordered_set<int>>& nodes,
@@ -105,11 +104,9 @@ compute_centralities(
         }
 
         if (diff < tol) {
-						x = new_x;
+				x = new_x;
 		        y = new_y;
-
-						break;
-	//          return std::make_tuple(new_x, new_y, node_ids, edge_ids);
+				break;
         }
 
         x = new_x;
@@ -124,6 +121,4 @@ compute_centralities(
 			edges_result[edge_ids[i]] = y[i];
 		
 		return std::make_pair(node_result, edges_result);
-
-//		return std::make_tuple(x, y, node_ids, edge_ids);
 }
