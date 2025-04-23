@@ -8,6 +8,7 @@ from numpy.linalg import norm
 from scipy.sparse.linalg import eigsh
 
 from ..convert import to_line_graph
+from ..cpp_functions.algorithms.centrality import compute_centralities
 from ..exception import XGIError
 from ..linalg import clique_motif_matrix, incidence_matrix
 from ..utils import convert_labels_to_integers, pairwise_incidence, ttsv1, ttsv2
@@ -65,6 +66,38 @@ def clique_eigenvector_centrality(H, tol=1e-6):
     # multiply by the sign to try and enforce positivity
     v = np.sign(v[0]) * v / norm(v, 1)
     return {node_dict[n]: v[n].item() for n in node_dict}
+
+
+def improved_node_edge_centrality(
+    H,
+    max_iter=100,
+    tol=1e-6,
+):
+    """Оптимизированная версия node-edge centrality с C++ вычислением матрицы инцидентности"""
+    if H.num_nodes == 0 or H.num_edges == 0 or not is_connected(H):
+        return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
+
+    # Получаем данные о гиперграфе
+    nodes_data = {n: set(H._node[n]) for n in H.nodes}
+    edges_data = {e: set(H._edge[e]) for e in H.edges}
+
+    # Вызываем C++ функцию
+    try:
+        node_centralities, edge_centralities, node_ids, edge_ids = compute_centralities(
+            nodes_data,
+            edges_data,
+            max_iter,
+            tol
+        )
+    except Exception as e:
+        warn(f"Error in C++ computation: {str(e)}")
+        return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
+
+    # Создаем маппинги и результаты
+    node_result = {node_id: node_centralities[idx] for idx, node_id in enumerate(node_ids)}
+    edge_result = {edge_id: edge_centralities[idx] for idx, edge_id in enumerate(edge_ids)}
+
+    return node_result, edge_result
 
 
 def node_edge_centrality(
