@@ -83,7 +83,7 @@ def improved_node_edge_centrality(
 
     # Вызываем C++ функцию
     try:
-        node_centralities, edge_centralities, node_ids, edge_ids = compute_centralities(
+        node_result, edge_result = compute_centralities(
             nodes_data,
             edges_data,
             max_iter,
@@ -92,10 +92,6 @@ def improved_node_edge_centrality(
     except Exception as e:
         warn(f"Error in C++ computation: {str(e)}")
         return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
-
-    # Создаем маппинги и результаты
-    node_result = {node_id: node_centralities[idx] for idx, node_id in enumerate(node_ids)}
-    edge_result = {edge_id: edge_centralities[idx] for idx, edge_id in enumerate(edge_ids)}
 
     return node_result, edge_result
 
