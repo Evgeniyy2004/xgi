@@ -1,3 +1,4 @@
+#include "connected.h"
 #include <vector>
 #include <cmath>
 #include <unordered_map>

@@ -12,7 +12,7 @@ from ..cpp_functions.algorithms.centrality import compute_centralities
 from ..exception import XGIError
 from ..linalg import clique_motif_matrix, incidence_matrix
 from ..utils import convert_labels_to_integers, pairwise_incidence, ttsv1, ttsv2
-from .connected import is_connected
+from .connected import is_connected, improved_is_connected
 from .properties import is_uniform
 
 __all__ = [
@@ -74,7 +74,7 @@ def improved_node_edge_centrality(
     tol=1e-6,
 ):
     """Optimized version node-edge centrality on C++"""
-    if H.num_nodes == 0 or H.num_edges == 0 or not is_connected(H):
+    if H.num_nodes == 0 or H.num_edges == 0 or not improved_is_connected(H):
         return {n: np.nan for n in H.nodes}, {e: np.nan for e in H.edges}
 
     # Вызываем C++ функцию
