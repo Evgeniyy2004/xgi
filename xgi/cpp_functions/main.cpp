@@ -3,6 +3,7 @@
 #include <pybind11/stl.h>  // Required for std::vector conversion
 #include "algorithms/centrality.h"
 #include "algorithms/connected.h"
+#include "convert/line_graph.h"
 
 namespace py = pybind11;
 
@@ -20,4 +21,12 @@ PYBIND11_MODULE(cpp_functions, m) {
           py::arg("node_dict"),
           py::arg("edge_dict"));
 
+		py::module_ m_convert = m.def_submodule("convert");
+		py::module_ m_line_graph = m_convert.def_submodule("line_graph");
+    m_line_graph.def("compute_line_graph_edges", &compute_line_graph_edges,
+        "Compute line graph edges in C++",
+        py::arg("hyperedges"),
+        py::arg("s"),
+        py::arg("weights"),
+        py::arg("max_threads"));
 }
